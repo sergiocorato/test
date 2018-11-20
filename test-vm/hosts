@@ -1,0 +1,7 @@
+# Hosts definition file
+
+[test]
+debian.local ansible_user=utente ansible_become_pass=utente
+
+[update]
+debian.local

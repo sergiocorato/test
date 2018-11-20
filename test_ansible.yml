@@ -1,0 +1,13 @@
+---
+
+- name: Configure common
+  hosts: test
+  become: yes
+  serial: 5
+  roles:
+    - common
+
+- name: Add support to maps where needed
+  hosts: maps
+  tasks:
+    - include: 'roles/common/tasks/maps.yml'

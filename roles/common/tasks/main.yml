@@ -1,0 +1,88 @@
+---
+
+- name: Install python
+  raw: apt-get install -f -y python
+
+- name: echo path
+  shell: echo $PATH
+
+- name: test connection
+  ping:
+
+- name: "SSH: Add current user to authorize_keys for ROOT"
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+- name: Update apt cache
+  apt:
+    update-cache: yes
+
+- name: Install base packages [1/2]
+  apt:
+    name:
+      - aptitude
+      - apt-transport-https
+      - rsyslog
+      - net-tools
+      - iputils-ping
+      - vim
+      - wget
+      - python
+      - htop
+      - sudo
+      - rsync
+      - git
+      - bzip2
+      - make
+      - locales
+      - logrotate
+      - unzip
+    state: present
+
+- name: Upgrade all packages to the latest version
+  apt:
+    name: "*"
+    state: latest
+
+  # Fail2ban is isntallable only _after_ rsyslog.
+
+- name: Touch  /var/log/auth.log if not existent to make fail2ban installable
+  file:
+    path: /var/log/auth.log
+    state: touch
+
+- name: Install base packages [2/2]
+  apt:
+    name:
+      - fail2ban
+    state: present
+
+- name: Clean apt package cache - missing command in ansible apt module
+  command: apt-get clean
+
+#- name: Generate en_US.UTF-8 locale
+#  locale_gen:
+#    name: en_US.UTF-8
+#    state: present
+
+- name: Waiting for ssh to come back...
+  local_action: wait_for host={{ server_name }} delay=1 timeout=300 port={{ ansible_port }}
+
+- name: Disable ssh root password access
+  lineinfile:
+    state: absent
+    dest: /etc/ssh/sshd_config
+    regexp: "PermitRootLogin\ *yes"
+
+- name: Add ssh root key access
+  lineinfile:
+    state: present
+    dest: /etc/ssh/sshd_config
+    line: "PermitRootLogin without-password"
+
+- name: Restart ssh
+  service:
+    name: ssh
+    state: restarted

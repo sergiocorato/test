@@ -1,0 +1,10 @@
+---
+
+- name: Install python requirements
+  shell: wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py
+
+- name: downgrade pip for uninstall distutils bug
+  shell: pip install --upgrade --force-reinstall pip==9.0.3
+
+- name: Install python requirements
+  shell: pip2 install -U googlemaps
